@@ -28,6 +28,9 @@ public class MedicineDAO {
     private static final String DELETE_MEDICINE_SQL =
             "DELETE FROM medicines WHERE medicine_id = ?";
 
+    private static final String SUPPLIER_EXISTS_SQL =
+            "SELECT 1 FROM suppliers WHERE supplier_id = ? LIMIT 1";
+
     private final DBConnection dbConnection;
 
     public MedicineDAO() {
@@ -95,6 +98,22 @@ public class MedicineDAO {
             preparedStatement.executeUpdate();
         } finally {
             dbConnection.closeResources(null, preparedStatement, connection);
+        }
+    }
+
+    public boolean supplierExists(int supplierId) throws SQLException {
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+
+        try {
+            connection = dbConnection.getConnection();
+            preparedStatement = connection.prepareStatement(SUPPLIER_EXISTS_SQL);
+            preparedStatement.setInt(1, supplierId);
+            resultSet = preparedStatement.executeQuery();
+            return resultSet.next();
+        } finally {
+            dbConnection.closeResources(resultSet, preparedStatement, connection);
         }
     }
 

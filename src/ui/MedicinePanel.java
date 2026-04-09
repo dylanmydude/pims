@@ -45,6 +45,10 @@ public class MedicinePanel extends JPanel {
         add(new JScrollPane(medicineTable), BorderLayout.CENTER);
         add(createButtonPanel(), BorderLayout.SOUTH);
 
+        refreshMedicines();
+    }
+
+    public void refreshMedicines() {
         loadMedicines();
     }
 
@@ -259,6 +263,11 @@ public class MedicinePanel extends JPanel {
                     expiryDateField,
                     supplierIdField
             );
+
+            if (!medicineDAO.supplierExists(medicine.getSupplier_id())) {
+                showError("Supplier ID does not exist. Use an existing supplier ID, such as 1 or 2.");
+                return;
+            }
 
             if (existingMedicine == null) {
                 medicineDAO.addMedicine(medicine);
