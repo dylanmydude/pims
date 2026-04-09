@@ -1,0 +1,23 @@
+# Build output
+out/
+*.class
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+
+# Database / runtime files
+*.sock
+*.pid
+*.ibd
+*.dblwr
+*.pem
+
+# Vendor binaries / data
+vendor/
+
+# IDE (optional)
+.idea/
+*.iml
