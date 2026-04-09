@@ -15,7 +15,6 @@ import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 
 import dao.UserDAO;
-import model.Role;
 import model.User;
 
 public class LoginFrame extends JFrame {
@@ -108,10 +107,11 @@ public class LoginFrame extends JFrame {
 
     private void redirectByRole(User user) {
         JFrame dashboard;
+        String role = user.getRole();
 
-        if (user.getRole() == Role.ADMIN) {
+        if ("ADMIN".equalsIgnoreCase(role) || "Admin".equalsIgnoreCase(role)) {
             dashboard = new AdminDashboard(user);
-        } else if (user.getRole() == Role.CASHIER) {
+        } else if ("CASHIER".equalsIgnoreCase(role) || "Cashier".equalsIgnoreCase(role)) {
             dashboard = new CashierDashboard(user);
         } else {
             JOptionPane.showMessageDialog(

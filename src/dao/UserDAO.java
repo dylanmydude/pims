@@ -4,18 +4,26 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
-import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
-import model.Role;
 import model.User;
 import utils.DBConnection;
 
 public class UserDAO {
 
     private static final String AUTHENTICATE_SQL =
-            "SELECT user_id, username, password, full_name, role, is_active, created_at "
+            "SELECT user_id, username, password, full_name, role "
                     + "FROM users WHERE username = ? AND password = ? AND is_active = TRUE LIMIT 1";
+
+    private static final String GET_ALL_USERS_SQL =
+            "SELECT user_id, username, password, full_name, role FROM users ORDER BY user_id";
+
+    private static final String ADD_USER_SQL =
+            "INSERT INTO users (username, password, full_name, role, is_active) VALUES (?, ?, ?, ?, TRUE)";
+
+    private static final String DELETE_USER_SQL =
+            "DELETE FROM users WHERE user_id = ?";
 
     private final DBConnection dbConnection;
 
@@ -45,23 +53,65 @@ public class UserDAO {
         }
     }
 
-    private User mapUser(ResultSet resultSet) throws SQLException {
-        User user = new User();
-        user.setUserId(resultSet.getInt("user_id"));
-        user.setUsername(resultSet.getString("username"));
-        user.setPassword(resultSet.getString("password"));
-        user.setFullName(resultSet.getString("full_name"));
-        user.setRole(Role.valueOf(resultSet.getString("role")));
-        user.setActive(resultSet.getBoolean("is_active"));
-        user.setCreatedAt(toLocalDateTime(resultSet.getTimestamp("created_at")));
-        return user;
+    public List<User> getAllUsers() throws SQLException {
+        List<User> users = new ArrayList<>();
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+
+        try {
+            connection = dbConnection.getConnection();
+            preparedStatement = connection.prepareStatement(GET_ALL_USERS_SQL);
+            resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                users.add(mapUser(resultSet));
+            }
+
+            return users;
+        } finally {
+            dbConnection.closeResources(resultSet, preparedStatement, connection);
+        }
     }
 
-    private LocalDateTime toLocalDateTime(Timestamp timestamp) {
-        if (timestamp == null) {
-            return null;
-        }
+    public void addUser(User user) throws SQLException {
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
 
-        return timestamp.toLocalDateTime();
+        try {
+            connection = dbConnection.getConnection();
+            preparedStatement = connection.prepareStatement(ADD_USER_SQL);
+            preparedStatement.setString(1, user.getUsername());
+            preparedStatement.setString(2, user.getPassword());
+            preparedStatement.setString(3, user.getFull_name());
+            preparedStatement.setString(4, user.getRole());
+            preparedStatement.executeUpdate();
+        } finally {
+            dbConnection.closeResources(null, preparedStatement, connection);
+        }
+    }
+
+    public void deleteUser(int id) throws SQLException {
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+
+        try {
+            connection = dbConnection.getConnection();
+            preparedStatement = connection.prepareStatement(DELETE_USER_SQL);
+            preparedStatement.setInt(1, id);
+            preparedStatement.executeUpdate();
+        } finally {
+            dbConnection.closeResources(null, preparedStatement, connection);
+        }
+    }
+
+    private User mapUser(ResultSet resultSet) throws SQLException {
+        User user = new User();
+        user.setUser_id(resultSet.getInt("user_id"));
+        user.setUsername(resultSet.getString("username"));
+        user.setPassword(resultSet.getString("password"));
+        user.setFull_name(resultSet.getString("full_name"));
+        user.setRole(resultSet.getString("role"));
+        return user;
     }
 }
