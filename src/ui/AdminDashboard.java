@@ -18,10 +18,12 @@ public class AdminDashboard extends JFrame {
 
     private final User user;
     private final MedicinePanel medicinePanel;
+    private final SupplierPanel supplierPanel;
 
     public AdminDashboard(User user) {
         this.user = user;
         this.medicinePanel = new MedicinePanel();
+        this.supplierPanel = new SupplierPanel();
 
         setTitle("PIMS - Admin Dashboard");
         setSize(900, 600);
@@ -56,12 +58,7 @@ public class AdminDashboard extends JFrame {
         tabbedPane.setBorder(BorderFactory.createEmptyBorder(0, 12, 12, 12));
 
         tabbedPane.addTab("Medicines", medicinePanel);
-        tabbedPane.addTab(
-                "Suppliers",
-                createModulePanel(
-                        new String[] {"ID", "Supplier Name", "Contact Person", "Phone", "Email", "Address"}
-                )
-        );
+        tabbedPane.addTab("Suppliers", supplierPanel);
         tabbedPane.addTab(
                 "Users",
                 createModulePanel(
@@ -78,6 +75,8 @@ public class AdminDashboard extends JFrame {
         tabbedPane.addChangeListener(event -> {
             if (tabbedPane.getSelectedComponent() == medicinePanel) {
                 medicinePanel.refreshMedicines();
+            } else if (tabbedPane.getSelectedComponent() == supplierPanel) {
+                supplierPanel.refreshSuppliers();
             }
         });
 
