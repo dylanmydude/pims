@@ -1,7 +1,6 @@
 package ui;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 
@@ -10,9 +9,7 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
-import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
 import model.User;
@@ -56,12 +53,7 @@ public class AdminDashboard extends JFrame {
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.setBorder(BorderFactory.createEmptyBorder(0, 12, 12, 12));
 
-        tabbedPane.addTab(
-                "Medicines",
-                createModulePanel(
-                        new String[] {"ID", "Code", "Medicine Name", "Category", "Unit Price", "Stock", "Expiry Date"}
-                )
-        );
+        tabbedPane.addTab("Medicines", new MedicinePanel());
         tabbedPane.addTab(
                 "Suppliers",
                 createModulePanel(
@@ -88,12 +80,11 @@ public class AdminDashboard extends JFrame {
         JPanel modulePanel = new JPanel(new BorderLayout(0, 10));
         modulePanel.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
 
-        JTable table = new JTable(createTableModel(columns));
+        javax.swing.JTable table = new javax.swing.JTable(createTableModel(columns));
         table.setRowHeight(24);
         table.setFillsViewportHeight(true);
 
-        JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setPreferredSize(new Dimension(780, 400));
+        javax.swing.JScrollPane scrollPane = new javax.swing.JScrollPane(table);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         buttonPanel.add(new JButton("Add"));

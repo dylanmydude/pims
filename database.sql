@@ -24,12 +24,14 @@ CREATE TABLE suppliers (
 CREATE TABLE medicines (
     medicine_id INT AUTO_INCREMENT PRIMARY KEY,
     supplier_id INT NOT NULL,
-    medicine_code VARCHAR(30) NOT NULL UNIQUE,
-    medicine_name VARCHAR(100) NOT NULL,
+    medicine_code VARCHAR(30) UNIQUE,
+    name VARCHAR(100) NOT NULL,
+    company VARCHAR(100) NOT NULL DEFAULT 'Unknown',
     description VARCHAR(255),
-    category VARCHAR(50),
-    unit_price DECIMAL(10, 2) NOT NULL,
-    stock_quantity INT NOT NULL DEFAULT 0,
+    medicine_type VARCHAR(50) NOT NULL,
+    price DECIMAL(10, 2) NOT NULL,
+    quantity_in_stock INT NOT NULL DEFAULT 0,
+    reorder_level INT NOT NULL DEFAULT 10,
     expiry_date DATE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_medicines_supplier
@@ -77,8 +79,19 @@ VALUES
     ('HealthPlus Distributors', 'John Mensah', '+27-11-555-1001', 'contact@healthplus.co.za', '12 Market Street, Johannesburg'),
     ('MediCare Supplies', 'Sarah Naidoo', '+27-21-555-2020', 'sales@medicaresupplies.co.za', '45 Main Road, Cape Town');
 
-INSERT INTO medicines (supplier_id, medicine_code, medicine_name, description, category, unit_price, stock_quantity, expiry_date)
+INSERT INTO medicines (
+    supplier_id,
+    medicine_code,
+    name,
+    company,
+    description,
+    medicine_type,
+    price,
+    quantity_in_stock,
+    reorder_level,
+    expiry_date
+)
 VALUES
-    (1, 'MED001', 'Paracetamol 500mg', 'Pain relief tablets', 'Analgesic', 25.50, 100, '2027-12-31'),
-    (2, 'MED002', 'Amoxicillin 250mg', 'Antibiotic capsules', 'Antibiotic', 68.00, 60, '2027-08-15'),
-    (1, 'MED003', 'Vitamin C 1000mg', 'Immune support tablets', 'Supplement', 45.75, 80, '2028-03-20');
+    (1, 'MED001', 'Paracetamol 500mg', 'Unknown', 'Pain relief tablets', 'Analgesic', 25.50, 100, 10, '2027-12-31'),
+    (2, 'MED002', 'Amoxicillin 250mg', 'Unknown', 'Antibiotic capsules', 'Antibiotic', 68.00, 60, 10, '2027-08-15'),
+    (1, 'MED003', 'Vitamin C 1000mg', 'Unknown', 'Immune support tablets', 'Supplement', 45.75, 80, 10, '2028-03-20');
