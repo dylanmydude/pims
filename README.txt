@@ -1,6 +1,37 @@
 Pharmacy Inventory Management System (PIMS)
 User Manual
 
+Quick Start For Windows
+
+Option 1: Build the Windows executable
+
+Run:
+
+`scripts\package_windows_exe.bat`
+
+Then start:
+
+`dist\PIMS-1.0.exe`
+
+Option 2: Run directly without packaging
+
+Compile:
+
+`if not exist out mkdir out`
+
+`for /r src %f in (*.java) do @echo %f >> sources.txt`
+
+`javac -cp "lib\mysql-connector-j.jar" -d out @sources.txt`
+
+Run:
+
+`java -cp "out;lib\mysql-connector-j.jar" ui.Main`
+
+Default login:
+- Admin: `admin` / `admin123`
+- Cashier: `cashier` / `cash123`
+
+
 1. System Overview
 
 The Pharmacy Inventory Management System (PIMS) is a Java desktop application developed for managing pharmacy operations. The system uses a Swing graphical user interface and connects to a MySQL database through JDBC.
@@ -51,6 +82,24 @@ Note:
 Example:
 - `lib/mysql-connector-j-9.3.0.jar`
 - Run command: `java -cp "out:lib/mysql-connector-j-9.3.0.jar" ui.Main`
+
+
+2.1 Packaging And Executable Setup
+
+This project includes packaging scripts in the `scripts` folder.
+
+Linux app image:
+- `./scripts/package_app_image.sh`
+- Output folder: `dist/PIMS`
+
+Windows executable:
+- `scripts\package_windows_exe.bat`
+- Output file: `dist\PIMS-1.0.exe`
+
+Important note:
+- A real `.exe` file can only be generated on Windows using `jpackage`.
+- From this Linux environment, the provided packaging script can create a native Linux app image, not a Windows `.exe`.
+- The Windows batch script is already prepared for building the `.exe` on a Windows machine with Java 17 and `jpackage` installed.
 
 
 3. Default Login Credentials
