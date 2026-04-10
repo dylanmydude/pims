@@ -68,8 +68,8 @@ VALUES
 
 INSERT INTO suppliers (name, contact_person, phone, email, address)
 VALUES
-    ('HealthPlus Distributors', 'John Mensah', '+27-11-555-1001', 'contact@healthplus.co.za', '12 Market Street, Johannesburg'),
-    ('MediCare Supplies', 'Sarah Naidoo', '+27-21-555-2020', 'sales@medicaresupplies.co.za', '45 Main Road, Cape Town');
+    ('HealthPlus Distributors', 'John Mensah', '+27-11-555-1001', 'contact@healthplus.co.za', '12 11th Ave, Benoni'),
+    ('MediCare Supplies', 'Sarah Naidoo', '+27-21-555-2020', 'sales@medicaresupplies.co.za', '45 North Rand Road, Boksburg');
 
 INSERT INTO medicines (
     supplier_id,
@@ -83,5 +83,5 @@ INSERT INTO medicines (
 )
 VALUES
     (1, 'Paracetamol 500mg', 'HealthFirst Labs', 'Tablet', 25.50, 100, 10, '2027-12-31'),
-    (2, 'Amoxicillin 250mg', 'MediCare Pharma', 'Capsule', 68.00, 60, 10, '2027-08-15'),
-    (1, 'Vitamin C 1000mg', 'Vitality Wellness', 'Tablet', 45.75, 80, 10, '2028-03-20');
+    (2, 'Panado 250mg', 'MediCare Pharma', 'Capsule', 68.00, 60, 10, '2027-08-15'),
+    (1, 'Corenza C 1000mg', 'Vitality Wellness', 'Tablet', 45.75, 80, 10, '2028-03-20');

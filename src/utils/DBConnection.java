@@ -17,7 +17,7 @@ public class DBConnection {
     private static volatile DBConnection instance;
 
     private DBConnection() {
-        // Singleton constructor.
+        // Singleton constructor
     }
 
     public static DBConnection getInstance() {

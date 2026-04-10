@@ -7,7 +7,7 @@ import ui.LoginFrame;
 public class Main {
 
     private Main() {
-        // Prevent instantiation.
+        // Prevent instantiation
     }
 
     public static void main(String[] args) {
