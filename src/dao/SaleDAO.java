@@ -17,7 +17,7 @@ public class SaleDAO {
             "INSERT INTO sales (user_id, sale_date, total_amount) VALUES (?, ?, ?)";
 
     private static final String INSERT_SALE_ITEM_SQL =
-            "INSERT INTO sale_items (sale_id, medicine_id, quantity, unit_price, subtotal) VALUES (?, ?, ?, ?, ?)";
+            "INSERT INTO sale_items (sale_id, medicine_id, quantity_sold, price_at_sale) VALUES (?, ?, ?, ?)";
 
     private static final String UPDATE_MEDICINE_STOCK_SQL =
             "UPDATE medicines SET quantity_in_stock = quantity_in_stock - ? "
@@ -64,7 +64,6 @@ public class SaleDAO {
                 saleItemStatement.setInt(2, item.getMedicine_id());
                 saleItemStatement.setInt(3, item.getQuantity_sold());
                 saleItemStatement.setDouble(4, item.getPrice_at_sale());
-                saleItemStatement.setDouble(5, item.getQuantity_sold() * item.getPrice_at_sale());
                 saleItemStatement.executeUpdate();
 
                 stockStatement.setInt(1, item.getQuantity_sold());

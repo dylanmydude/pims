@@ -13,15 +13,15 @@ import utils.DBConnection;
 public class SupplierDAO {
 
     private static final String GET_ALL_SUPPLIERS_SQL =
-            "SELECT supplier_id, supplier_name, contact_person, phone, email, address "
+            "SELECT supplier_id, name, contact_person, phone, email, address "
                     + "FROM suppliers ORDER BY supplier_id";
 
     private static final String ADD_SUPPLIER_SQL =
-            "INSERT INTO suppliers (supplier_name, contact_person, phone, email, address) "
+            "INSERT INTO suppliers (name, contact_person, phone, email, address) "
                     + "VALUES (?, ?, ?, ?, ?)";
 
     private static final String UPDATE_SUPPLIER_SQL =
-            "UPDATE suppliers SET supplier_name = ?, contact_person = ?, phone = ?, email = ?, address = ? "
+            "UPDATE suppliers SET name = ?, contact_person = ?, phone = ?, email = ?, address = ? "
                     + "WHERE supplier_id = ?";
 
     private static final String DELETE_SUPPLIER_SQL =
@@ -108,7 +108,7 @@ public class SupplierDAO {
     private Supplier mapSupplier(ResultSet resultSet) throws SQLException {
         Supplier supplier = new Supplier();
         supplier.setSupplier_id(resultSet.getInt("supplier_id"));
-        supplier.setName(resultSet.getString("supplier_name"));
+        supplier.setName(resultSet.getString("name"));
         supplier.setContact_person(resultSet.getString("contact_person"));
         supplier.setPhone(resultSet.getString("phone"));
         supplier.setEmail(resultSet.getString("email"));

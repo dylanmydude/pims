@@ -14,13 +14,16 @@ public class UserDAO {
 
     private static final String AUTHENTICATE_SQL =
             "SELECT user_id, username, password, full_name, role "
-                    + "FROM users WHERE username = ? AND password = ? AND is_active = TRUE LIMIT 1";
+                    + "FROM users WHERE username = ? AND password = ? LIMIT 1";
 
     private static final String GET_ALL_USERS_SQL =
             "SELECT user_id, username, password, full_name, role FROM users ORDER BY user_id";
 
     private static final String ADD_USER_SQL =
-            "INSERT INTO users (username, password, full_name, role, is_active) VALUES (?, ?, ?, ?, TRUE)";
+            "INSERT INTO users (username, password, full_name, role) VALUES (?, ?, ?, ?)";
+
+    private static final String UPDATE_USER_SQL =
+            "UPDATE users SET full_name = ?, role = ? WHERE user_id = ?";
 
     private static final String DELETE_USER_SQL =
             "DELETE FROM users WHERE user_id = ?";
@@ -99,6 +102,22 @@ public class UserDAO {
             connection = dbConnection.getConnection();
             preparedStatement = connection.prepareStatement(DELETE_USER_SQL);
             preparedStatement.setInt(1, id);
+            preparedStatement.executeUpdate();
+        } finally {
+            dbConnection.closeResources(null, preparedStatement, connection);
+        }
+    }
+
+    public void updateUser(User user) throws SQLException {
+        Connection connection = null;
+        PreparedStatement preparedStatement = null;
+
+        try {
+            connection = dbConnection.getConnection();
+            preparedStatement = connection.prepareStatement(UPDATE_USER_SQL);
+            preparedStatement.setString(1, user.getFull_name());
+            preparedStatement.setString(2, user.getRole());
+            preparedStatement.setInt(3, user.getUser_id());
             preparedStatement.executeUpdate();
         } finally {
             dbConnection.closeResources(null, preparedStatement, connection);

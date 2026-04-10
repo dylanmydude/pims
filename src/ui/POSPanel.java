@@ -22,6 +22,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.SwingWorker;
 import javax.swing.RowFilter;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
@@ -47,11 +48,15 @@ public class POSPanel extends JPanel {
     private final JTable cartTable;
     private final JTextField searchField;
     private final JLabel totalLabel;
+    private final JButton addToCartButton;
+    private final JButton checkStockButton;
     private final JButton checkoutButton;
+    private final JButton clearCartButton;
     private final TableRowSorter<DefaultTableModel> medicinesSorter;
     private final Map<Integer, Medicine> medicinesById;
     private final Map<Integer, CartItem> cartItems;
     private final DecimalFormat amountFormat;
+    private boolean checkoutInProgress;
 
     public POSPanel(User user) {
         this.currentUser = user;
@@ -63,11 +68,15 @@ public class POSPanel extends JPanel {
         this.cartTable = new JTable(cartTableModel);
         this.searchField = new JTextField(24);
         this.totalLabel = new JLabel("Total: 0.00");
+        this.addToCartButton = new JButton("Add To Cart");
+        this.checkStockButton = new JButton("Check Stock");
         this.checkoutButton = new JButton("Checkout");
+        this.clearCartButton = new JButton("Clear Cart");
         this.medicinesSorter = new TableRowSorter<>(medicinesTableModel);
         this.medicinesById = new LinkedHashMap<>();
         this.cartItems = new LinkedHashMap<>();
         this.amountFormat = new DecimalFormat("0.00");
+        this.checkoutInProgress = false;
 
         setLayout(new BorderLayout(12, 12));
         setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
@@ -95,11 +104,12 @@ public class POSPanel extends JPanel {
         medicinesPanel.add(searchField, BorderLayout.NORTH);
         medicinesPanel.add(new JScrollPane(medicinesTable), BorderLayout.CENTER);
 
-        JButton addToCartButton = new JButton("Add To Cart");
         addToCartButton.addActionListener(event -> addSelectedMedicineToCart());
+        checkStockButton.addActionListener(event -> showSelectedMedicineStock());
 
         JPanel leftButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
         leftButtonPanel.add(addToCartButton);
+        leftButtonPanel.add(checkStockButton);
         medicinesPanel.add(leftButtonPanel, BorderLayout.SOUTH);
 
         JPanel cartPanel = new JPanel(new BorderLayout(0, 10));
@@ -117,8 +127,6 @@ public class POSPanel extends JPanel {
         bottomPanel.setBorder(BorderFactory.createEmptyBorder(6, 0, 0, 0));
 
         totalLabel.setBorder(BorderFactory.createEmptyBorder(0, 4, 0, 0));
-
-        JButton clearCartButton = new JButton("Clear Cart");
 
         checkoutButton.addActionListener(event -> handleCheckout());
         clearCartButton.addActionListener(event -> clearCart());
@@ -142,7 +150,7 @@ public class POSPanel extends JPanel {
     }
 
     private DefaultTableModel createCartTableModel() {
-        return new DefaultTableModel(new String[] {"Medicine", "Quantity", "Unit Price", "Line Total"}, 0) {
+        return new DefaultTableModel(new String[] {"Name", "Quantity", "Price", "Subtotal"}, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
                 return false;
@@ -215,6 +223,10 @@ public class POSPanel extends JPanel {
     }
 
     private void addSelectedMedicineToCart() {
+        if (checkoutInProgress) {
+            return;
+        }
+
         int selectedRow = medicinesTable.getSelectedRow();
 
         if (selectedRow < 0) {
@@ -278,6 +290,33 @@ public class POSPanel extends JPanel {
         refreshCartTable();
     }
 
+    private void showSelectedMedicineStock() {
+        int selectedRow = medicinesTable.getSelectedRow();
+
+        if (selectedRow < 0) {
+            showError("Please select a medicine to check stock.");
+            return;
+        }
+
+        int modelRow = medicinesTable.convertRowIndexToModel(selectedRow);
+        int medicineId = (int) medicinesTableModel.getValueAt(modelRow, 0);
+        Medicine medicine = medicinesById.get(medicineId);
+
+        if (medicine == null) {
+            showError("Selected medicine could not be found.");
+            return;
+        }
+
+        JOptionPane.showMessageDialog(
+                this,
+                "Name: " + medicine.getName()
+                        + "\nPrice: " + amountFormat.format(medicine.getPrice())
+                        + "\nQuantity Available: " + medicine.getQuantity_in_stock(),
+                "Stock Check",
+                JOptionPane.INFORMATION_MESSAGE
+        );
+    }
+
     private void refreshCartTable() {
         cartTableModel.setRowCount(0);
         double total = 0.0;
@@ -295,10 +334,14 @@ public class POSPanel extends JPanel {
         }
 
         totalLabel.setText("Total: " + amountFormat.format(total));
-        checkoutButton.setEnabled(!cartItems.isEmpty());
+        updateActionState();
     }
 
     private void clearCart() {
+        if (checkoutInProgress) {
+            return;
+        }
+
         if (cartItems.isEmpty()) {
             return;
         }
@@ -319,6 +362,10 @@ public class POSPanel extends JPanel {
     }
 
     private void handleCheckout() {
+        if (checkoutInProgress) {
+            return;
+        }
+
         if (cartItems.isEmpty()) {
             showError("Cart is empty.");
             return;
@@ -338,24 +385,56 @@ public class POSPanel extends JPanel {
             sale.setTotal_amount(calculateCartTotal());
 
             List<SaleItem> items = buildSaleItems();
-            saleDAO.createSale(sale, items);
-
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Sale completed successfully.",
-                    "Checkout Successful",
-                    JOptionPane.INFORMATION_MESSAGE
-            );
-
-            cartItems.clear();
-            refreshCartTable();
-            loadMedicines();
+            List<BillFrame.BillItem> billItems = buildBillItems();
+            runCheckoutInBackground(sale, items, billItems);
         } catch (IllegalArgumentException exception) {
             showError(exception.getMessage());
-        } catch (SQLException exception) {
-            showError("Checkout failed: " + exception.getMessage());
-            loadMedicines();
         }
+    }
+
+    private void runCheckoutInBackground(Sale sale, List<SaleItem> items, List<BillFrame.BillItem> billItems) {
+        setCheckoutInProgress(true);
+
+        SwingWorker<Void, Void> worker = new SwingWorker<>() {
+            private Exception failure;
+
+            @Override
+            protected Void doInBackground() {
+                try {
+                    saleDAO.createSale(sale, items);
+                } catch (Exception exception) {
+                    failure = exception;
+                }
+                return null;
+            }
+
+            @Override
+            protected void done() {
+                setCheckoutInProgress(false);
+
+                if (failure != null) {
+                    showError("Checkout failed: " + failure.getMessage());
+                    loadMedicines();
+                    return;
+                }
+
+                JOptionPane.showMessageDialog(
+                        POSPanel.this,
+                        "Sale completed successfully.",
+                        "Checkout Successful",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
+
+                BillFrame billFrame = new BillFrame(sale, billItems);
+                billFrame.setVisible(true);
+
+                cartItems.clear();
+                refreshCartTable();
+                loadMedicines();
+            }
+        };
+
+        worker.execute();
     }
 
     private void validateCartForCheckout() {
@@ -397,6 +476,16 @@ public class POSPanel extends JPanel {
         return items;
     }
 
+    private List<BillFrame.BillItem> buildBillItems() {
+        List<BillFrame.BillItem> items = new ArrayList<>();
+
+        for (CartItem item : cartItems.values()) {
+            items.add(new BillFrame.BillItem(item.name, item.quantity, item.unitPrice));
+        }
+
+        return items;
+    }
+
     private double calculateCartTotal() {
         double total = 0.0;
 
@@ -409,6 +498,22 @@ public class POSPanel extends JPanel {
 
     private void showError(String message) {
         JOptionPane.showMessageDialog(this, message, "Error", JOptionPane.ERROR_MESSAGE);
+    }
+
+    private void setCheckoutInProgress(boolean inProgress) {
+        checkoutInProgress = inProgress;
+        searchField.setEnabled(!inProgress);
+        medicinesTable.setEnabled(!inProgress);
+        cartTable.setEnabled(!inProgress);
+        updateActionState();
+    }
+
+    private void updateActionState() {
+        boolean hasCartItems = !cartItems.isEmpty();
+        addToCartButton.setEnabled(!checkoutInProgress);
+        checkStockButton.setEnabled(!checkoutInProgress);
+        clearCartButton.setEnabled(!checkoutInProgress && hasCartItems);
+        checkoutButton.setEnabled(!checkoutInProgress && hasCartItems);
     }
 
     private static final class CartItem {

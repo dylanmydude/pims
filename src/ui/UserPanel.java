@@ -57,12 +57,15 @@ public class UserPanel extends JPanel {
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
 
         JButton addButton = new JButton("Add");
+        JButton editButton = new JButton("Edit");
         JButton deleteButton = new JButton("Delete");
 
         addButton.addActionListener(event -> showAddUserDialog());
+        editButton.addActionListener(event -> showEditUserDialog());
         deleteButton.addActionListener(event -> deleteSelectedUser());
 
         buttonPanel.add(addButton);
+        buttonPanel.add(editButton);
         buttonPanel.add(deleteButton);
         return buttonPanel;
     }
@@ -171,6 +174,59 @@ public class UserPanel extends JPanel {
         dialog.setVisible(true);
     }
 
+    private void showEditUserDialog() {
+        int selectedRow = userTable.getSelectedRow();
+
+        if (selectedRow < 0) {
+            showError("Please select a user to edit.");
+            return;
+        }
+
+        int userId = (int) tableModel.getValueAt(selectedRow, 0);
+        String username = String.valueOf(tableModel.getValueAt(selectedRow, 1));
+        String fullName = String.valueOf(tableModel.getValueAt(selectedRow, 2));
+        String role = String.valueOf(tableModel.getValueAt(selectedRow, 3));
+
+        JDialog dialog = new JDialog(getOwnerFrame(), "Edit User", true);
+        JPanel formPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints constraints = new GridBagConstraints();
+        constraints.insets = new Insets(6, 6, 6, 6);
+        constraints.anchor = GridBagConstraints.WEST;
+        constraints.fill = GridBagConstraints.HORIZONTAL;
+
+        JTextField usernameField = new JTextField(username, 20);
+        usernameField.setEditable(false);
+        usernameField.setEnabled(false);
+
+        JTextField fullNameField = new JTextField(fullName, 20);
+        JComboBox<String> roleComboBox = new JComboBox<>(new String[] {"Admin", "Cashier"});
+        roleComboBox.setSelectedItem(role);
+
+        addField(formPanel, constraints, 0, "Username:", usernameField);
+        addField(formPanel, constraints, 1, "Full Name:", fullNameField);
+        addField(formPanel, constraints, 2, "Role:", roleComboBox);
+
+        JButton saveButton = new JButton("Update");
+        JButton cancelButton = new JButton("Cancel");
+
+        saveButton.addActionListener(event -> updateUser(dialog, userId, fullNameField, roleComboBox));
+        cancelButton.addActionListener(event -> dialog.dispose());
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonPanel.add(saveButton);
+        buttonPanel.add(cancelButton);
+
+        JPanel contentPanel = new JPanel(new BorderLayout(0, 10));
+        contentPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        contentPanel.add(formPanel, BorderLayout.CENTER);
+        contentPanel.add(buttonPanel, BorderLayout.SOUTH);
+
+        dialog.setContentPane(contentPanel);
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+        dialog.setVisible(true);
+    }
+
     private void saveUser(
             JDialog dialog,
             JTextField usernameField,
@@ -187,6 +243,35 @@ public class UserPanel extends JPanel {
             showError(exception.getMessage());
         } catch (SQLException exception) {
             showError("Unable to save user: " + exception.getMessage());
+        }
+    }
+
+    private void updateUser(
+            JDialog dialog,
+            int userId,
+            JTextField fullNameField,
+            JComboBox<String> roleComboBox
+    ) {
+        try {
+            String fullName = fullNameField.getText() == null ? "" : fullNameField.getText().trim();
+            Object selectedRole = roleComboBox.getSelectedItem();
+
+            if (selectedRole == null || String.valueOf(selectedRole).trim().isEmpty()) {
+                throw new IllegalArgumentException("Role must be selected.");
+            }
+
+            User user = new User();
+            user.setUser_id(userId);
+            user.setFull_name(fullName);
+            user.setRole(String.valueOf(selectedRole).trim());
+
+            userDAO.updateUser(user);
+            refreshUsers();
+            dialog.dispose();
+        } catch (IllegalArgumentException exception) {
+            showError(exception.getMessage());
+        } catch (SQLException exception) {
+            showError("Unable to update user: " + exception.getMessage());
         }
     }
 
@@ -214,7 +299,7 @@ public class UserPanel extends JPanel {
         user.setUsername(username);
         user.setPassword(password);
         user.setFull_name(fullName);
-        user.setRole(role.toUpperCase());
+        user.setRole(role);
         return user;
     }
 
@@ -247,10 +332,6 @@ public class UserPanel extends JPanel {
 
     private Frame getOwnerFrame() {
         return (Frame) SwingUtilities.getWindowAncestor(this);
-    }
-
-    private void showInfo(String message) {
-        JOptionPane.showMessageDialog(this, message, "Information", JOptionPane.INFORMATION_MESSAGE);
     }
 
     private void showError(String message) {
